@@ -129,6 +129,17 @@ except AttributeError:
                         final_milliseconds += get_tick_count_last_sample
                         return final_milliseconds / 1000.0
 
+        elif sys.platform.startswith('hp-ux'):
+            # time.time() is implemented in CPython with
+            # clock_gettime(CLOCK_REALTIME), with a resolution of at least
+            # 1e-7, observed by evaluating time.time() - time.time() repeatedly
+            # in the REPL. No better solution is available as gethrtime()
+            # requires 64-bit code, and ctypes is broken in CPython 2.7 on
+            # HP-UX.
+            def monotonic():
+                """Monotonic clock, cannot go backward."""
+                return time.time()
+
         else:
             try:
                 clock_gettime = ctypes.CDLL(ctypes.util.find_library('c'),
